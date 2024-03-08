@@ -63,9 +63,41 @@ const transferBalance = async (req, res, next) => {
         });
     }
 
+    const toUser = await User.findOne({ _id: to }).session(session);
+    const user = await User.findOne({ _id: req.userId }).session(session);
+
+    const d = new Date();
+    let date = `${d.getDate()}/${d.getMonth()}/${d.getFullYear()}`;
+    let time = `${d.getHours()}:${d.getMinutes()}`;
+
+    // if (!toUser) {
+    //     await session.abortTransaction();
+    //     return res.status(400).json({
+    //         message: "Invalid account !!!"
+    //     });
+    // }
+
     await Account.updateOne({ userId: req.userId }, { $inc: { balance: -amount } }).session(session);
 
     await Account.updateOne({ userId: to }, { $inc: { balance: amount } }).session(session);
+
+    account.transaction.unshift({
+        name: toUser.firstName + " " + toUser.lastName,
+        date: date,
+        time: time,
+        amount: "-" + amount
+    });
+
+    toAccount.transaction.unshift({
+        name: user.firstName + " " + user.lastName,
+        date: date,
+        time: time,
+        amount: "+" + amount
+    })
+
+    await account.save();
+
+    await toAccount.save();
 
     await session.commitTransaction();
 
@@ -80,7 +112,26 @@ const transferBalance = async (req, res, next) => {
     // }
 };
 
+const getAllTransaction = async (req, res, next) => {
+    const userId = req.userId;
+    try {
+        const account = await Account.findOne({
+            userId
+        });
+
+        return res.status(200).json({
+            message: "Get account successfully !!!",
+            transaction: account.transaction
+        })
+    } catch (error) {
+        return res.status(411).json({
+            message: "Something went wrong !!!"
+        })
+    }
+}
+
 module.exports = {
     getBalance,
-    transferBalance
+    transferBalance,
+    getAllTransaction
 };

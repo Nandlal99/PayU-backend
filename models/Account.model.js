@@ -10,7 +10,27 @@ const accountSchema = new mongoose.Schema({
     balance: {
         type: Number,
         required: true
-    }
+    },
+    transaction: [
+        {
+            name: {
+                type: String,
+                required: true
+            },
+            date: {
+                type: String,
+                required: true
+            },
+            time: {
+                type: String,
+                required: true
+            },
+            amount: {
+                type: String,
+                required: true
+            }
+        }
+    ]
 });
 
 module.exports = mongoose.model("Account", accountSchema);
